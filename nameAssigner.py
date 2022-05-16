@@ -10,17 +10,19 @@ import shutil
 rng = default_rng()
 bit_generator = rng.bit_generator
 
+# check if the data directory exists. If it doesn't create it
+if not os.path.exists("data"):
+    os.mkdir("data")
+
 # ask the user to put the csv file in the data directory and then press enter to continue
 print("Please put the csv file in the data directory and press enter to continue ...")
 input()
 
 # Ask if user wants to format the 5th grade or 6th grade data
-gradeToFormat = input("What grade would you like to format? (5)th or (6)th grade? ")
+gradeToFormat = int(input("What grade would you like to format? Please enter a number between 1 and 6: "))
 # check if the user input is valid and if not ask again
-while gradeToFormat != "5" and gradeToFormat != "6":
-    gradeToFormat = input("Please enter a valid grade (5)th or (6)th grade: ")
-# set gradeToFormat to an integer
-gradeToFormat = int(gradeToFormat)
+while gradeToFormat < 1 or gradeToFormat > 6:
+    gradeToFormat = int(input("Please enter a number between 1 and 6."))
 
 # check if the "output/AssignedNames" and "output/AssignedEmails" directories exist.
 # If they exist empty them, and if they don't create them
@@ -44,41 +46,41 @@ csvFilePath = "data/" + csvFileName
 # read the csv file into a pandas dataframe
 df = pd.read_csv(csvFilePath)
 
-# sort the dataframe by the classroom
-df.sort_values(by=["Classroom"], inplace=True)
+# sort the dataframe by the class column
+df.sort_values(by=["class"], inplace=True)
 
-# make an empty list to store the classroom names
-classroomNames = []
-# loop through the dataframe and add the classroom names to the list
+# make an empty list to store the class names
+classNames = []
+# loop through the dataframe and add the class names to the list
 for index, row in df.iterrows():
-    classroomNames.append(row["Classroom"])
+    classNames.append(row["class"])
 # remove duplicates from the list
-classroomNames = list(set(classroomNames))
+classNames = list(set(classNames))
 # sort the list alphabetically
-classroomNames.sort()
+classNames.sort()
 
-# make a variable to store the amount of classrooms
-classroomAmount = len(classroomNames)
+# make a variable to store the amount of classes
+classAmount = len(classNames)
 
-# set the index to the classroom
-df.set_index("Classroom", inplace=True)
+# set the index to the class
+df.set_index("class", inplace=True)
 
-# make a list to store the dataframes for all the classrooms
-classroomDataFrames = []
+# make a list to store the dataframes for all the classes
+classDataFrames = []
 # loop through the dataframe and add the dataframes to the list
-for classroom in classroomNames:
-    classroomDataFrames.append(df.loc[classroom])
+for classes in classNames:
+    classDataFrames.append(df.loc[classes])
 
-# store the dataframes in a dictionary with the classroom names as keys
-classroomDict = dict(zip(classroomNames, classroomDataFrames))
+# store the dataframes in a dictionary with the class names as keys
+classDict = dict(zip(classNames, classDataFrames))
 
 shuffledRows: dict[Series | None | ndarray | Any, Any] = {}
 # loop through the dictionary and shuffle the rows
-for key, value in classroomDict.items():
+for key, value in classDict.items():
     # shuffle the rows
     shuffledRows[key] = value.sample(frac=1, random_state=bit_generator)
 
-# print the shuffled rows for each classroom
+# print the shuffled rows for each class
 for key, value in shuffledRows.items():
     print("\n" + key + ":")
     print(value)
@@ -91,7 +93,7 @@ for key, value in shuffledRows.items():
     names = []
     # loop through the rows and add the names to the list
     for index, row in value.iterrows():
-        names.append(row["Name"])
+        names.append(row["name"])
     # add the list to the dictionary
     shuffledNames[key] = names
 
@@ -103,12 +105,12 @@ for key, value in shuffledRows.items():
     emails = []
     # loop through the rows and add the emails to the list
     for index, row in value.iterrows():
-        emails.append(row["Email"])
+        emails.append(row["email"])
     # add the list to the dictionary
     shuffledEmails[key] = emails
 
 # take the first name + " -> " + the next name in the dictionary and add it to a dictionary named AssignedNames
-# the last name should be assigned to the first name of that classroom
+# the last name should be assigned to the first name of that class
 AssignedNames = {}
 # loop through the dictionary and add the names to the dictionary
 for key, value in shuffledNames.items():
@@ -127,7 +129,7 @@ for key, value in shuffledNames.items():
     AssignedNames[key] = names
 
 # take the first email + " -> " + the next email in the dictionary and add it to a dictionary named AssignedEmails
-# the last email should be assigned to the first email of that classroom
+# the last email should be assigned to the first email of that class
 AssignedEmails = {}
 # loop through the dictionary and add the emails to the dictionary
 for key, value in shuffledEmails.items():
@@ -148,7 +150,7 @@ for key, value in shuffledEmails.items():
 # wait for the user to press enter
 input("\nPress enter to save the files...")
 
-# save the assigned names for each classroom to a txt file named after the classroom and "AssignedNames.txt"
+# save the assigned names for each class to a txt file named after the class and "AssignedNames.txt"
 # in the output folder
 for key, value in AssignedNames.items():
     # open the file
@@ -159,7 +161,7 @@ for key, value in AssignedNames.items():
     # close the file
     file.close()
 
-# save the assigned emails for each classroom to a txt file named after the classroom and "AssignedEmails.txt"
+# save the assigned emails for each class to a txt file named after the class and "AssignedEmails.txt"
 # in the output folder
 for key, value in AssignedEmails.items():
     # open the file
